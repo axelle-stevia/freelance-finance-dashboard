@@ -191,12 +191,18 @@ with col_right:
     ).reset_index().rename(columns={"index": "Catégorie"})
 
     CATEGORY_FR = {
-        "software": "Logiciels",
+        # Nouveaux noms (categories.json actuel)
+        "software_subscriptions": "Logiciels",
+        "coworking_office":       "Coworking",
+        "transport":              "Transport",
+        "meals_entertainment":    "Repas / Réceptions",
+        "office_supplies":        "Fournitures bureau",
+        "marketing_advertising":  "Marketing",
+        "telecommunications":     "Télécommunications",
+        "other":                  "Autre",
+        # Anciens noms (compatibilité)
+        "software":  "Logiciels",
         "coworking": "Coworking",
-        "transport": "Transport",
-        "meals_entertainment": "Repas / Réceptions",
-        "office_supplies": "Fournitures bureau",
-        "other": "Autre",
     }
     by_cat["Catégorie"] = by_cat["Catégorie"].map(CATEGORY_FR).fillna(by_cat["Catégorie"])
 
@@ -210,13 +216,109 @@ with col_right:
     fig_pie.update_layout(margin=dict(l=0, r=0, t=30, b=0), height=280)
     st.plotly_chart(fig_pie, use_container_width=True)
 
-    # Reçus comptants
-    if not rec_df.empty:
-        st.caption("🧾 Reçus comptants inclus")
-        display_rec = rec_df[["merchant", "date", "amount", "category"]].copy()
-        display_rec.columns = ["Marchand", "Date", "Montant", "Catégorie"]
-        display_rec["Montant"] = display_rec["Montant"].apply(lambda x: f"${x:.2f}")
-        st.dataframe(display_rec, use_container_width=True, hide_index=True)
+st.divider()
+
+# ══════════════════════════════════════════════════════════════════
+# SECTION 3b : REÇUS COMPTANTS
+# ══════════════════════════════════════════════════════════════════
+st.subheader("🧾 Reçus comptants")
+
+if not rec_df.empty:
+    st.caption("Entrez manuellement les montants non lus par l'OCR.")
+
+    # En-tête du tableau
+    h1, h2, h3, h4 = st.columns([2, 2, 2, 2])
+    h1.markdown("**Marchand**")
+    h2.markdown("**Date**")
+    h3.markdown("**Montant**")
+    h4.markdown("**Paiement**")
+
+    # Saisie manuelle via session_state
+    # session_state = mémoire de Streamlit pendant la session
+    # Quand l'utilisateur entre un chiffre, Streamlit recharge la page
+    # mais session_state garde les valeurs saisies
+    if "manual_amounts" not in st.session_state:
+        st.session_state.manual_amounts = {}
+
+    rec_edit = rec_df.copy()
+
+    for i, row in rec_edit.iterrows():
+        col_a, col_b, col_c, col_d = st.columns([2, 2, 2, 2])
+        with col_a:
+            if pd.isna(row["amount"]):
+                # Montant manquant → marchand éditable
+                merchant_val = st.text_input(
+                    "Marchand",
+                    value="",
+                    placeholder="ex: Chen's Art Supply",
+                    key=f"merchant_{i}",
+                    label_visibility="collapsed",
+                )
+                rec_edit.at[i, "merchant"] = merchant_val
+            else:
+                st.write(str(row["merchant"] or row["filename"]))
+
+        with col_b:
+            st.write(str(row["date"]) if pd.notna(row["date"]) else "—")
+
+        with col_c:
+            if pd.isna(row["amount"]):
+                val = st.number_input(
+                    f"Montant reçu {i}",
+                    min_value=0.0,
+                    step=0.01,
+                    key=f"receipt_{i}",
+                    label_visibility="collapsed",
+                )
+                st.session_state.manual_amounts[i] = val
+                if val > 0:
+                    rec_edit.at[i, "amount"] = val
+            else:
+                st.write(f"${row['amount']:.2f}")
+                rec_edit.at[i, "amount"] = row["amount"]
+
+        with col_d:
+            if pd.isna(row["amount"]):
+                # Catégorie déterminée automatiquement selon le nom entré
+                merchant_entered = rec_edit.at[i, "merchant"]
+                if merchant_entered:
+                    from engine.data_loader import categorize, load_categories
+                    cats = load_categories()
+                    detected_cat = categorize(merchant_entered, cats)
+                    CATEGORY_FR_INLINE = {
+                        "software_subscriptions": "Logiciels",
+                        "coworking_office": "Coworking",
+                        "transport": "Transport",
+                        "meals_entertainment": "Repas",
+                        "office_supplies": "Fournitures",
+                        "other": "Autre",
+                        "software": "Logiciels",
+                        "coworking": "Coworking",
+                    }
+                    cat_label = CATEGORY_FR_INLINE.get(detected_cat, detected_cat)
+                    rec_edit.at[i, "category"] = detected_cat
+                    st.caption(f"📂 {cat_label}")
+                else:
+                    st.write("—")
+            else:
+                st.write(str(row.get("payment_method", "—")))
+
+    # Recalculer le total avec les montants manuels inclus
+    total_cash = rec_edit["amount"].dropna().sum()
+    total_card = summary["expenses"]["total_card"]
+    credits    = summary["expenses"]["credits_received"]
+    total_exp  = total_card + total_cash - credits
+
+    col_m1, col_m2, col_m3 = st.columns(3)
+    col_m1.metric("Total reçus comptants", f"${total_cash:.2f}")
+    col_m2.metric("Total dépenses (mis à jour)", f"${total_exp:.2f}")
+    col_m3.metric("Net Q1 (mis à jour)",
+                  f"${summary['revenue']['total_paid'] - total_exp:,.2f}")
+
+    st.caption("Les montants saisis s'appliquent à cette session uniquement.")
+
+else:
+    st.info("Aucun reçu parsé. Installe EasyOCR : pip install easyocr")
 
 st.divider()
 
