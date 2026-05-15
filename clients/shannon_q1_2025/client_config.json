@@ -1,0 +1,25 @@
+{
+  "_comment": "Paramètres spécifiques au client — à modifier pour chaque nouveau client",
+  "client_name": "Claude E. Shannon",
+  "currency": "CAD",
+  "fiscal_quarter": "Q1-2025",
+  "date_range": {
+    "start": "2025-01-01",
+    "end": "2025-03-31"
+  },
+  "tax_rates": {
+    "TPS": 0.05,
+    "TVQ": 0.09975
+  },
+  "known_personal_expenses": [
+    "NETFLIX",
+    "PETCO"
+  ],
+  "known_clients": [
+    "BrightPath Marketing",
+    "Nonna's Kitchen",
+    "GreenLoop Technologies",
+    "Bloom & Co",
+    "Atelier Nomade"
+  ]
+}

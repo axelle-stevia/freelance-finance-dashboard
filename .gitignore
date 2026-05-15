@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.env
+venv/
+.venv/
+
+# Données clients — jamais sur GitHub
+# shoebox/ = documents bruts confidentiels (invoices, PDF, photos)
+# output/  = rapports générés
+clients/*/shoebox/
+clients/*/output/
+
+# Système
+.DS_Store
+Thumbs.db

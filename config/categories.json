@@ -1,0 +1,25 @@
+{
+  "_comment": "Catégories BUSINESS uniquement — identiques pour tous les clients. Les dépenses personnelles sont dans client_config.json de chaque client.",
+  "categories": {
+    "software": [
+      "ADOBE", "CANVA", "GOOGLE.*WORKSPACE", "SHOPIFY",
+      "NAMECHEAP", "GITHUB", "NOTION", "FIGMA", "DROPBOX"
+    ],
+    "coworking": [
+      "VRBO COWORKING", "WEWORK", "REGUS", "COWORKING", "ESPACE PARTAGE"
+    ],
+    "transport": [
+      "WAYMO", "UBER", "LYFT", "TAXI", "STATIONNEMENT",
+      "VIA RAIL", "STM", "PARKING"
+    ],
+    "meals_entertainment": [
+      "RESTAURANT", "CAFE", "REST\\b", "BISTRO", "BRASSERIE",
+      "MYRIADE", "PETIT DEP", "NONNA"
+    ],
+    "office_supplies": [
+      "STAPLES", "BUREAU EN GROS", "AMAZON.*OFFICE",
+      "POSTES CANADA", "CHEN.*ART"
+    ]
+  },
+  "_note": "Pas de catégorie 'personal' ici — chaque client définit ses propres exclusions dans client_config.json"
+}
